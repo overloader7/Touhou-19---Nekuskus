@@ -1,0 +1,25 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.31025.194
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Touhou 19 - Nekuskus", "Touhou 19 - Nekuskus.csproj", "{D89DBA1C-E2C4-43DE-B10C-AB189467D9F0}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{D89DBA1C-E2C4-43DE-B10C-AB189467D9F0}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{D89DBA1C-E2C4-43DE-B10C-AB189467D9F0}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{D89DBA1C-E2C4-43DE-B10C-AB189467D9F0}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{D89DBA1C-E2C4-43DE-B10C-AB189467D9F0}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {97C14FAC-B89E-44E3-B46F-F088C4D10E2B}
+	EndGlobalSection
+EndGlobal
