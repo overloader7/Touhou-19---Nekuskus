@@ -14,7 +14,7 @@ namespace Touhou_19___Nekuskus
             Marisa
         }
         
-        
+        public static (int, int) Stage = (102, 3);
         public static (int, int) Score = (102, 7);
         public static (int, int) Lives = (102, 10);
         public static (int, int) Bombs = (102, 12);
@@ -25,12 +25,15 @@ namespace Touhou_19___Nekuskus
         public static int CurLives;
         public static int CurBombs;
         public static char Hitbox;
+        public static char BossHitbox;
         public static ConsoleColor CharacterColor;
+        public static decimal counter = 1.0m;
 
         public enum ObjectType
         {
             Player,
             Enemy,
+            Boss,
             PlayerBullet,
             EnemyBullet
         }
@@ -38,13 +41,15 @@ namespace Touhou_19___Nekuskus
         {
             public (int, int) Position;
             public ObjectType Type;
-            public float MoveCounter;
-
-            public GameObject((int, int) _Position, ObjectType _Type, int _MoveCounter)
+            public decimal MoveCounter;
+            public int PerishTime;
+            public int PerishCount = 1;
+            public GameObject((int, int) _Position, ObjectType _Type, decimal _MoveCounter, int _PerishTimer = 0)
             {
                 Position = _Position;
                 Type = _Type;
                 MoveCounter = _MoveCounter;
+                PerishTime = _PerishTimer;
             }
         }
         public static List<GameObject> Bullets = new List<GameObject>();
@@ -163,7 +168,7 @@ namespace Touhou_19___Nekuskus
             }
             Console.ReadKey();
         }
-        static void CheckKeys(float counter)
+        static void CheckKeys(decimal counter)
         {
             if(counter % Characters[0].MoveCounter != 0) return;
             if(Keyboard.IsKeyDown(Key.Right))
@@ -194,6 +199,23 @@ namespace Touhou_19___Nekuskus
                     Characters[0].Position.Item2 += 1;
                 }
             }
+            if(Keyboard.IsKeyDown(Key.Z))
+            {
+                switch(Postać)
+                {
+                    case Postacie.Reimu:
+
+                        break;
+                    case Postacie.Marisa:
+                        GameObject laser = new GameObject((Characters[0].Position.Item1, Characters[0].Position.Item2 - 1), ObjectType.PlayerBullet, 0.5m, 2);
+                        Bullets.Add(laser);
+                        break;
+                }
+            }
+            if(Keyboard.IsKeyDown(Key.X))
+            {
+
+            }
         }
         static void MainLoop()
         {
@@ -205,7 +227,6 @@ namespace Touhou_19___Nekuskus
             {
                 
             }
-            float counter = 1.0f;
             Console.WriteLine("Started MainLoop()!");
             ClearGameSpace();
             DefLives = CurLives = 5;
@@ -215,16 +236,18 @@ namespace Touhou_19___Nekuskus
                 case Postacie.Reimu:
                     DefBombs = CurBombs = 3;
                     Hitbox = 'R';
-                    Characters[0].MoveCounter = 1f;
+                    Characters[0].MoveCounter = 1m;
                     CharacterColor = ConsoleColor.Red;
                     break;
                 case Postacie.Marisa:
                     DefBombs = CurBombs = 2;
                     Hitbox = 'M';
-                    Characters[0].MoveCounter = 0.5f;
+                    Characters[0].MoveCounter = 0.5m;
                     CharacterColor = ConsoleColor.Yellow;
                     break;
             }
+            Thread t = new Thread(new ParameterizedThreadStart(GameProgress));
+            t.Start(1);
             while(true)
             {
                 if(counter == 8)
@@ -234,20 +257,49 @@ namespace Touhou_19___Nekuskus
                 CheckKeys(counter);
                 foreach(GameObject ch in Characters)
                 {
-                    WriteHorizontal((ch.Position.Item1, ch.Position.Item2), Hitbox.ToString(), CharacterColor);
+                    WriteHorizontal((ch.Position.Item1, ch.Position.Item2), (ch.Type == ObjectType.Player) ? Hitbox.ToString() : (ch.Type == ObjectType.Boss) ? BossHitbox.ToString() : "E" , CharacterColor);
                 }
+                List<GameObject> bullets_to_add = new List<GameObject>();
+                List<GameObject> bullets_to_delete = new List<GameObject>();
                 foreach(GameObject b in Bullets)
                 {
-                    //TODO yet
+                    WriteHorizontal((b.Position.Item1, b.Position.Item2), (b.Type == ObjectType.PlayerBullet) ? (Postać == Postacie.Reimu) ? "." : "|" : "#");
+                    b.PerishCount += 1;      
+                    if(b.Position.Item2 - 1 != (IsBarVisible ? 1 : 0 ))
+                    bullets_to_add.Add(new GameObject((b.Position.Item1, b.Position.Item2 - 1), ObjectType.PlayerBullet, (b.Type == ObjectType.PlayerBullet) ? (Postać == Postacie.Reimu) ? 1m : 0.5m : 1m, (b.Type == ObjectType.PlayerBullet) ? (Postać == Postacie.Reimu) ? 1 : 2 : 2));
+                    if(b.PerishCount >= b.PerishTime)
+                    {
+                        bullets_to_delete.Add(b);
+                    }
+                }
+                foreach(GameObject b in bullets_to_add)
+                {
+                    Bullets.Add(b);
+                }
+                foreach(GameObject b in bullets_to_delete)
+                {
+                    Bullets.Remove(b);
                 }
                 Console.BackgroundColor = ConsoleColor.DarkCyan;
                 WriteHorizontal((Lives.Item1, Lives.Item2), new string('*', CurLives - 1), ConsoleColor.DarkRed);
                 WriteHorizontal((Bombs.Item1, Bombs.Item2), new string('*', CurBombs), ConsoleColor.DarkBlue);
                 Console.BackgroundColor = ConsoleColor.Black;
-                counter += 0.5f;
+                counter += 0.5m;
                 Thread.Sleep(33);
                 ClearGameSpace();
             }
+        }
+        static void GameProgress(object stage) //1 - 7, 7 equals Extra
+        {
+            if(!(stage is int)) throw new ArgumentException();
+            Console.BackgroundColor = ConsoleColor.Cyan;
+            WriteHorizontal((Stage.Item1, Stage.Item2), "Stage 1", ConsoleColor.DarkGreen);
+            Console.BackgroundColor = ConsoleColor.Black;
+
+            //Creating enemies and bullets starts here uwu
+            GameObject enemy = new GameObject((45, 5), ObjectType.Enemy, 2m);
+            Characters.Add(enemy);
+
         }
     }
 }
