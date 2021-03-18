@@ -236,6 +236,14 @@ namespace Touhou_19___Nekuskus
                 {
                     WriteHorizontal((ch.Position.Item1, ch.Position.Item2), Hitbox.ToString(), CharacterColor);
                 }
+                foreach(GameObject b in Bullets)
+                {
+                    //TODO yet
+                }
+                Console.BackgroundColor = ConsoleColor.DarkCyan;
+                WriteHorizontal((Lives.Item1, Lives.Item2), new string('★', CurLives - 1), ConsoleColor.DarkRed);
+                WriteHorizontal((Bombs.Item1, Bombs.Item2), new string('★', CurBombs), ConsoleColor.DarkBlue);
+                Console.BackgroundColor = ConsoleColor.Black;
                 counter += 0.5f;
                 Thread.Sleep(33);
                 ClearGameSpace();
