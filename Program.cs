@@ -42,8 +42,8 @@ namespace Touhou_19___Nekuskus
                 Type = _Type;
             }
         }
-        public static List<GameObject> Bullets;
-        public static List<GameObject> Characters;
+        public static List<GameObject> Bullets = new List<GameObject>();
+        public static List<GameObject> Characters = new List<GameObject>();
 
         static void WriteHorizontal(ValueTuple<int, int> coords, string text, ConsoleColor color = ConsoleColor.White) //1 is col, 2 is row
         {
@@ -167,16 +167,15 @@ namespace Touhou_19___Nekuskus
                     throw new NotImplementedException();
                     break;
             }
-
+            Characters.Add(new GameObject((100, 55), ObjectType.Player));
             while(true)
             {
-
+                foreach(GameObject ch in Characters)
+                {
+                    WriteHorizontal((ch.Position.Item1, ch.Position.Item2), Hitbox.ToString(), ConsoleColor.Red);
+                }
                 Thread.Sleep(50);               
             }
-        }
-        static void CheckFramerate()
-        {
-
         }
     }
 }
