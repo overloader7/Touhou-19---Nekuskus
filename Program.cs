@@ -124,7 +124,7 @@ namespace Touhou_19___Nekuskus
             int i = 0;
             while (i < 75)
             {
-                WriteHorizontal((0, i), new string(' ', 199));
+                WriteHorizontal((0, i), new string(' ', 200));
                 i++;
             }
             Console.SetCursorPosition(0, 0);
@@ -177,7 +177,7 @@ namespace Touhou_19___Nekuskus
             }
             if(Keyboard.IsKeyDown(Key.Down))
             {
-                if(!(Characters[0].Position.Item2 == 75))
+                if(!(Characters[0].Position.Item2 == 74))
                 {
                     Characters[0].Position.Item2 += 1;
                 }
@@ -209,7 +209,8 @@ namespace Touhou_19___Nekuskus
                 {
                     WriteHorizontal((ch.Position.Item1, ch.Position.Item2), Hitbox.ToString(), ConsoleColor.Red);
                 }
-                Thread.Sleep(50);               
+                Thread.Sleep(33);
+                ClearGameSpace();
             }
         }
     }
