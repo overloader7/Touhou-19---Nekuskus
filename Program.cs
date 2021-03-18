@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Threading;
 
 namespace Touhou_19___Nekuskus
 {
@@ -10,6 +11,8 @@ namespace Touhou_19___Nekuskus
             Reimu,
             Marisa
         }
+        
+        
         public static (int, int) Score = (218, 7);
         public static (int, int) Lives = (218, 10);
         public static (int, int) Bombs = (218, 12);
@@ -20,19 +23,46 @@ namespace Touhou_19___Nekuskus
         public static int CurLives;
         public static int CurBombs;
         public static char Hitbox;
-        static void WriteHorizontal(ValueTuple<int, int> coords, string text) //1 is col, 2 is row
+
+        public enum ObjectType
         {
+            Player,
+            Enemy,
+            PlayerBullet,
+            EnemyBullet
+        }
+        public class GameObject
+        {
+            public (int, int) Position;
+            public ObjectType Type;
+
+            public GameObject((int, int) _Position, ObjectType _Type)
+            {
+                Position = _Position;
+                Type = _Type;
+            }
+        }
+        public static List<GameObject> Bullets;
+        public static List<GameObject> Characters;
+
+        static void WriteHorizontal(ValueTuple<int, int> coords, string text, ConsoleColor color = ConsoleColor.White) //1 is col, 2 is row
+        {
+            ConsoleColor curcolor = Console.ForegroundColor;
             (int, int) cursorpos = (Console.CursorLeft, Console.CursorTop);
             if(text.Length + coords.Item1 > Console.WindowWidth) throw new ArgumentOutOfRangeException();
+            Console.ForegroundColor = color;
             Console.SetCursorPosition(coords.Item1, coords.Item2);
             Console.Write(text);
-            Console.SetCursorPosition(cursorpos.Item1, cursorpos.Item2);
+            Console.SetCursorPosition(0, 0);
+            Console.ForegroundColor = curcolor;
         }
-        static void WriteVertical(ValueTuple<int, int> coords, string text) //1 is col, 2 is row
+        static void WriteVertical(ValueTuple<int, int> coords, string text, ConsoleColor color = ConsoleColor.White) //1 is col, 2 is row
         {
+            ConsoleColor curcolor = Console.ForegroundColor;
             (int, int) cursorpos = (Console.CursorLeft, Console.CursorTop);
             if(text.Length + coords.Item2 > Console.WindowHeight) throw new ArgumentOutOfRangeException();
             Console.SetCursorPosition(coords.Item1, coords.Item2);
+            Console.ForegroundColor = color;
             foreach(char c in text)
             {
                 Console.Write(c);
@@ -40,7 +70,36 @@ namespace Touhou_19___Nekuskus
                 if(coords.Item2 == 75) return;
                 Console.SetCursorPosition(coords.Item1, coords.Item2);
             }
-            Console.SetCursorPosition(cursorpos.Item1, cursorpos.Item2);
+            Console.ForegroundColor = curcolor;
+            Console.SetCursorPosition(0, 0);
+        }
+        static void RenderBackgroundColors()
+        {
+            Console.BackgroundColor = ConsoleColor.DarkCyan;
+            int i = 0;
+            while(i < 7)
+            {
+                WriteHorizontal((201, i), new string(' ', 39));
+                i++;
+            }
+            WriteHorizontal((201, 7), new string(' ', 9));
+            WriteHorizontal((228, 7), new string(' ', 12));
+            WriteHorizontal((201, 8), new string(' ', 39));
+            WriteHorizontal((201, 9), new string(' ', 39));
+            WriteHorizontal((201, 10), new string(' ', 9));
+            WriteHorizontal((228, 10), new string(' ', 12));
+            WriteHorizontal((201, 8), new string(' ', 39));
+            WriteHorizontal((201, 11), new string(' ', 39));
+            WriteHorizontal((201, 12), new string(' ', 9));
+            WriteHorizontal((228, 12), new string(' ', 12));
+            i = 13;
+            while(i < 74)
+            {
+                WriteHorizontal((201, i), new string(' ', 39));
+                i++;
+            }
+            WriteHorizontal((201, 74), new string(' ', 38));
+            Console.BackgroundColor = ConsoleColor.Black;   
         }
         static void InitUI()
         {
@@ -50,9 +109,12 @@ namespace Touhou_19___Nekuskus
             Console.SetWindowSize(240, 75);
             Console.SetWindowPosition(0, 0);
             WriteVertical((200, 0), new string('|', 75));
+            Console.BackgroundColor = ConsoleColor.DarkCyan;
             WriteHorizontal((210, 7), "Score: 00000000000");
-            WriteHorizontal((210, 10), "Lives: ");
-            WriteHorizontal((210, 12), "Bombs: ");
+            WriteHorizontal((210, 10), "Lives:            ", ConsoleColor.DarkRed);
+            WriteHorizontal((210, 12), "Bombs:            ", ConsoleColor.DarkBlue);
+            Console.BackgroundColor = ConsoleColor.Black;
+            RenderBackgroundColors();
             Console.SetCursorPosition(0, 0);
         }
         static void ClearGameSpace()
@@ -70,7 +132,7 @@ namespace Touhou_19___Nekuskus
             Console.WriteLine("Starting...");
             InitUI();
             WriteHorizontal((90, 10), "Choose your character!");
-            WriteHorizontal((97, 13), "Reimu");
+            WriteHorizontal((97, 13), "Reimu", ConsoleColor.Red);
             
             wyborpostaci:
             Console.SetCursorPosition(97, 15);
@@ -104,7 +166,17 @@ namespace Touhou_19___Nekuskus
                     Hitbox = 'M';
                     throw new NotImplementedException();
                     break;
-            }        
+            }
+
+            while(true)
+            {
+
+                Thread.Sleep(50);               
+            }
+        }
+        static void CheckFramerate()
+        {
+
         }
     }
 }
