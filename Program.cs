@@ -25,6 +25,7 @@ namespace Touhou_19___Nekuskus
         public static int CurLives;
         public static int CurBombs;
         public static char Hitbox;
+        public static ConsoleColor CharacterColor;
 
         public enum ObjectType
         {
@@ -37,7 +38,7 @@ namespace Touhou_19___Nekuskus
         {
             public (int, int) Position;
             public ObjectType Type;
-            public int MoveCounter;
+            public float MoveCounter;
 
             public GameObject((int, int) _Position, ObjectType _Type, int _MoveCounter)
             {
@@ -139,7 +140,8 @@ namespace Touhou_19___Nekuskus
             Console.WriteLine("Starting...");
             InitUI();
             WriteHorizontal((90, 10), "Choose your character!");
-            WriteHorizontal((97, 13), "Reimu", ConsoleColor.Red);
+            WriteHorizontal((95, 13), "Reimu", ConsoleColor.Red);
+            WriteHorizontal((102, 13), "Marisa", ConsoleColor.Yellow);
             
             wyborpostaci:
             Console.SetCursorPosition(97, 15);
@@ -149,6 +151,11 @@ namespace Touhou_19___Nekuskus
                 Postać = Postacie.Reimu;
                 MainLoop();
             }
+            else if(postać == "M" || postać == "Marisa")
+            {
+                Postać = Postacie.Marisa;
+                MainLoop();
+            }
             else
             {
                 WriteHorizontal((0, 15), new string(' ', 199));
@@ -156,7 +163,7 @@ namespace Touhou_19___Nekuskus
             }
             Console.ReadKey();
         }
-        static void CheckKeys(int counter)
+        static void CheckKeys(float counter)
         {
             if(counter % Characters[0].MoveCounter != 0) return;
             if(Keyboard.IsKeyDown(Key.Right))
@@ -190,7 +197,7 @@ namespace Touhou_19___Nekuskus
         }
         static void MainLoop()
         {
-            int counter = 1;
+            float counter = 1.0f;
             Console.WriteLine("Started MainLoop()!");
             ClearGameSpace();
             DefLives = CurLives = 5;
@@ -200,28 +207,29 @@ namespace Touhou_19___Nekuskus
                 case Postacie.Reimu:
                     DefBombs = CurBombs = 3;
                     Hitbox = 'R';
-                    Characters[0].MoveCounter = 2;
+                    Characters[0].MoveCounter = 1f;
+                    CharacterColor = ConsoleColor.Red;
                     break;
                 case Postacie.Marisa:
                     DefBombs = CurBombs = 2;
                     Hitbox = 'M';
-                    Characters[0].MoveCounter = 1;
-                    throw new NotImplementedException();
+                    Characters[0].MoveCounter = 0.5f;
+                    CharacterColor = ConsoleColor.Yellow;
                     break;
             }
             while(true)
             {
-                if(counter == 9)
+                if(counter == 8)
                 {
                     counter = 1;
                 }
                 CheckKeys(counter);
                 foreach(GameObject ch in Characters)
                 {
-                    WriteHorizontal((ch.Position.Item1, ch.Position.Item2), Hitbox.ToString(), ConsoleColor.Red);
+                    WriteHorizontal((ch.Position.Item1, ch.Position.Item2), Hitbox.ToString(), CharacterColor);
                 }
-                counter++;
-                Thread.Sleep(16);
+                counter += 0.5f;
+                Thread.Sleep(33);
                 ClearGameSpace();
             }
         }
