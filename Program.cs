@@ -57,15 +57,26 @@ namespace Touhou_19___Nekuskus
         {
             Console.WriteLine("Starting...");
             InitUI();
-            Console.WriteLine("Test");
-            WriteVertical((25, 0), new string('|', 75));
-            Console.ReadKey(true);
-            ClearGameSpace();
-            Console.ReadKey(true);
+            WriteHorizontal((90, 10), "Choose your character!");
+            WriteHorizontal((97, 13), "Reimu");
+            
+            wyborpostaci:
+            Console.SetCursorPosition(97, 15);
+            string postać = Console.ReadLine();
+            if(postać == "R" || postać == "Reimu")
+            {
+                MainLoop();
+            }
+            else
+            {
+                WriteHorizontal((0, 15), new string(' ', 199));
+                goto wyborpostaci;
+            }
+            Console.ReadKey();
         }
         static void MainLoop()
         {
-
+            Console.WriteLine("Started MainLoop()!");
         }
     }
 }
