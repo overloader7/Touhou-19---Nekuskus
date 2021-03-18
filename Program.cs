@@ -1,6 +1,6 @@
 ﻿using System;
-using System.Linq;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading;
 using System.Windows.Input;
 
@@ -44,12 +44,20 @@ namespace Touhou_19___Nekuskus
             public decimal MoveCounter;
             public int PerishTime;
             public int PerishCount = 1;
-            public GameObject((int, int) _Position, ObjectType _Type, decimal _MoveCounter, int _PerishTimer = 0)
+            public string Direction;
+            public GameObject((int, int) _Position, ObjectType _Type, decimal _MoveCounter)
+            {
+                Position = _Position;
+                Type = _Type;
+                MoveCounter = _MoveCounter;
+            }
+            public GameObject((int, int) _Position, ObjectType _Type, decimal _MoveCounter, string _Direction, int _PerishTimer = 0)
             {
                 Position = _Position;
                 Type = _Type;
                 MoveCounter = _MoveCounter;
                 PerishTime = _PerishTimer;
+                Direction = _Direction;
             }
         }
         public static List<GameObject> Bullets = new List<GameObject>();
@@ -204,10 +212,15 @@ namespace Touhou_19___Nekuskus
                 switch(Postać)
                 {
                     case Postacie.Reimu:
-
+                        GameObject ball1 = new GameObject((Characters[0].Position.Item1 - 1, Characters[0].Position.Item2 - 1), ObjectType.PlayerBullet, 1m, "left", 1);
+                        GameObject ball2 = new GameObject((Characters[0].Position.Item1, Characters[0].Position.Item2 - 1), ObjectType.PlayerBullet, 1m, "forward", 1);
+                        GameObject ball3 = new GameObject((Characters[0].Position.Item1 + 1, Characters[0].Position.Item2 - 1), ObjectType.PlayerBullet, 1m, "right", 1);
+                        Bullets.Add(ball1);
+                        Bullets.Add(ball2);
+                        Bullets.Add(ball3);
                         break;
                     case Postacie.Marisa:
-                        GameObject laser = new GameObject((Characters[0].Position.Item1, Characters[0].Position.Item2 - 1), ObjectType.PlayerBullet, 0.5m, 2);
+                        GameObject laser = new GameObject((Characters[0].Position.Item1, Characters[0].Position.Item2 - 1), ObjectType.PlayerBullet, 0.5m, "forward", 2);
                         Bullets.Add(laser);
                         break;
                 }
@@ -266,7 +279,33 @@ namespace Touhou_19___Nekuskus
                     WriteHorizontal((b.Position.Item1, b.Position.Item2), (b.Type == ObjectType.PlayerBullet) ? (Postać == Postacie.Reimu) ? "." : "|" : "#");
                     b.PerishCount += 1;      
                     if(b.Position.Item2 - 1 != (IsBarVisible ? 1 : 0 ))
-                    bullets_to_add.Add(new GameObject((b.Position.Item1, b.Position.Item2 - 1), ObjectType.PlayerBullet, (b.Type == ObjectType.PlayerBullet) ? (Postać == Postacie.Reimu) ? 1m : 0.5m : 1m, (b.Type == ObjectType.PlayerBullet) ? (Postać == Postacie.Reimu) ? 1 : 2 : 2));
+                    switch (b.Type)
+                    {
+                        case ObjectType.EnemyBullet:
+                            break;
+                        case ObjectType.PlayerBullet:
+                            if(Postać == Postacie.Reimu)
+                            {
+                                switch(b.Direction)
+                                {
+                                        case "left":
+                                            if(b.Position.Item1 != 0)
+                                            bullets_to_add.Add(new GameObject((b.Position.Item1 - 1, b.Position.Item2 - 1), ObjectType.PlayerBullet, 1m, "left", 1));
+                                            break;
+                                        case "forward":
+                                            bullets_to_add.Add(new GameObject((b.Position.Item1, b.Position.Item2 - 1), ObjectType.PlayerBullet, 1m, "forward", 1));
+                                            break;
+                                        case "right":
+                                            bullets_to_add.Add(new GameObject((b.Position.Item1 + 1, b.Position.Item2 - 1), ObjectType.PlayerBullet, 1m, "right", 1));
+                                            break;
+                                }
+                            }
+                            else if(Postać == Postacie.Marisa)
+                            {
+                                bullets_to_add.Add(new GameObject((b.Position.Item1, b.Position.Item2 - 1), ObjectType.PlayerBullet, 0.5m, "forward" ,2));
+                            }
+                            break;
+                    }
                     if(b.PerishCount >= b.PerishTime)
                     {
                         bullets_to_delete.Add(b);
