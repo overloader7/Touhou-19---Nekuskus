@@ -1,6 +1,8 @@
 ﻿using System;
+using System.Linq;
 using System.Collections.Generic;
 using System.Threading;
+using System.Windows.Input;
 
 namespace Touhou_19___Nekuskus
 {
@@ -127,6 +129,7 @@ namespace Touhou_19___Nekuskus
             }
             Console.SetCursorPosition(0, 0);
         }
+        [STAThread]
         static void Main(string[] args)
         {
             Console.WriteLine("Starting...");
@@ -149,6 +152,37 @@ namespace Touhou_19___Nekuskus
             }
             Console.ReadKey();
         }
+        static void CheckKeys()
+        {
+            if(Keyboard.IsKeyDown(Key.Right))
+            {
+                if(!(Characters[0].Position.Item1 == 199))
+                {
+                    Characters[0].Position.Item1 += 1;
+                }
+            }
+            if(Keyboard.IsKeyDown(Key.Left))
+            {
+                if(!(Characters[0].Position.Item1 == 0))
+                {
+                    Characters[0].Position.Item1 -= 1;
+                }
+            }
+            if(Keyboard.IsKeyDown(Key.Up))
+            {
+                if(!(Characters[0].Position.Item2 == (IsBarVisible ? 1 : 0)))
+                {
+                    Characters[0].Position.Item2 -= 1;
+                }
+            }
+            if(Keyboard.IsKeyDown(Key.Down))
+            {
+                if(!(Characters[0].Position.Item2 == 75))
+                {
+                    Characters[0].Position.Item2 += 1;
+                }
+            }
+        }
         static void MainLoop()
         {
             
@@ -170,6 +204,7 @@ namespace Touhou_19___Nekuskus
             Characters.Add(new GameObject((100, 55), ObjectType.Player));
             while(true)
             {
+                CheckKeys();
                 foreach(GameObject ch in Characters)
                 {
                     WriteHorizontal((ch.Position.Item1, ch.Position.Item2), Hitbox.ToString(), ConsoleColor.Red);
