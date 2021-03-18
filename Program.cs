@@ -168,7 +168,7 @@ namespace Touhou_19___Nekuskus
             if(counter % Characters[0].MoveCounter != 0) return;
             if(Keyboard.IsKeyDown(Key.Right))
             {
-                if(!(Characters[0].Position.Item1 == 99))
+                if(!(Characters[0].Position.Item1 == 89))
                 {
                     Characters[0].Position.Item1 += 1;
                 }
@@ -241,8 +241,8 @@ namespace Touhou_19___Nekuskus
                     //TODO yet
                 }
                 Console.BackgroundColor = ConsoleColor.DarkCyan;
-                WriteHorizontal((Lives.Item1, Lives.Item2), new string('★', CurLives - 1), ConsoleColor.DarkRed);
-                WriteHorizontal((Bombs.Item1, Bombs.Item2), new string('★', CurBombs), ConsoleColor.DarkBlue);
+                WriteHorizontal((Lives.Item1, Lives.Item2), new string('*', CurLives - 1), ConsoleColor.DarkRed);
+                WriteHorizontal((Bombs.Item1, Bombs.Item2), new string('*', CurBombs), ConsoleColor.DarkBlue);
                 Console.BackgroundColor = ConsoleColor.Black;
                 counter += 0.5f;
                 Thread.Sleep(33);
