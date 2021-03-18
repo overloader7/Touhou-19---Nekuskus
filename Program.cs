@@ -3,11 +3,23 @@ using System.Collections.Generic;
 
 namespace Touhou_19___Nekuskus
 {
-    class Program
+    static class Program
     {
+        public enum Postacie
+        {
+            Reimu,
+            Marisa
+        }
         public static (int, int) Score = (218, 7);
         public static (int, int) Lives = (218, 10);
         public static (int, int) Bombs = (218, 12);
+        public static Postacie Postać;
+        public static bool IsBarVisible = false;
+        public static int DefLives;
+        public static int DefBombs;
+        public static int CurLives;
+        public static int CurBombs;
+        public static char Hitbox;
         static void WriteHorizontal(ValueTuple<int, int> coords, string text) //1 is col, 2 is row
         {
             (int, int) cursorpos = (Console.CursorLeft, Console.CursorTop);
@@ -65,6 +77,7 @@ namespace Touhou_19___Nekuskus
             string postać = Console.ReadLine();
             if(postać == "R" || postać == "Reimu")
             {
+                Postać = Postacie.Reimu;
                 MainLoop();
             }
             else
@@ -76,7 +89,22 @@ namespace Touhou_19___Nekuskus
         }
         static void MainLoop()
         {
+            
             Console.WriteLine("Started MainLoop()!");
+            ClearGameSpace();
+            DefLives = CurLives = 5;
+            switch(Postać)
+            {
+                case Postacie.Reimu:
+                    DefBombs = CurBombs = 3;
+                    Hitbox = 'R';
+                    break;
+                case Postacie.Marisa:
+                    DefBombs = CurBombs = 2;
+                    Hitbox = 'M';
+                    throw new NotImplementedException();
+                    break;
+            }        
         }
     }
 }
