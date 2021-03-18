@@ -37,11 +37,13 @@ namespace Touhou_19___Nekuskus
         {
             public (int, int) Position;
             public ObjectType Type;
+            public int MoveCounter;
 
-            public GameObject((int, int) _Position, ObjectType _Type)
+            public GameObject((int, int) _Position, ObjectType _Type, int _MoveCounter)
             {
                 Position = _Position;
                 Type = _Type;
+                MoveCounter = _MoveCounter;
             }
         }
         public static List<GameObject> Bullets = new List<GameObject>();
@@ -106,9 +108,11 @@ namespace Touhou_19___Nekuskus
         static void InitUI()
         {
             Console.SetCursorPosition(0, 0);
+            Console.SetWindowPosition(0, 0);
             Console.Write(new string(' ', 18000));
-            Console.SetBufferSize(240, 75);
             Console.SetWindowSize(240, 75);
+            Console.SetWindowPosition(0, 0);
+            Console.SetBufferSize(240, 75);
             Console.SetWindowPosition(0, 0);
             WriteVertical((200, 0), new string('|', 75));
             Console.BackgroundColor = ConsoleColor.DarkCyan;
@@ -152,8 +156,9 @@ namespace Touhou_19___Nekuskus
             }
             Console.ReadKey();
         }
-        static void CheckKeys()
+        static void CheckKeys(int counter)
         {
+            if(counter % Characters[0].MoveCounter != 0) return;
             if(Keyboard.IsKeyDown(Key.Right))
             {
                 if(!(Characters[0].Position.Item1 == 199))
@@ -185,31 +190,38 @@ namespace Touhou_19___Nekuskus
         }
         static void MainLoop()
         {
-            
+            int counter = 1;
             Console.WriteLine("Started MainLoop()!");
             ClearGameSpace();
             DefLives = CurLives = 5;
+            Characters.Add(new GameObject((100, 55), ObjectType.Player, 1));
             switch(Postać)
             {
                 case Postacie.Reimu:
                     DefBombs = CurBombs = 3;
                     Hitbox = 'R';
+                    Characters[0].MoveCounter = 2;
                     break;
                 case Postacie.Marisa:
                     DefBombs = CurBombs = 2;
                     Hitbox = 'M';
+                    Characters[0].MoveCounter = 1;
                     throw new NotImplementedException();
                     break;
             }
-            Characters.Add(new GameObject((100, 55), ObjectType.Player));
             while(true)
             {
-                CheckKeys();
+                if(counter == 9)
+                {
+                    counter = 1;
+                }
+                CheckKeys(counter);
                 foreach(GameObject ch in Characters)
                 {
                     WriteHorizontal((ch.Position.Item1, ch.Position.Item2), Hitbox.ToString(), ConsoleColor.Red);
                 }
-                Thread.Sleep(33);
+                counter++;
+                Thread.Sleep(16);
                 ClearGameSpace();
             }
         }
