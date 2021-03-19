@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Windows.Input;
+using System.Runtime.InteropServices;
+using System.Diagnostics;
 
 namespace Touhou_19___Nekuskus
 {
@@ -18,6 +20,10 @@ namespace Touhou_19___Nekuskus
         public static (int, int) Score = (102, 7);
         public static (int, int) Lives = (102, 10);
         public static (int, int) Bombs = (102, 12);
+        public static (int, int) Power = (102, 15);
+        public static (int, int) Graze = (102, 17);
+        public static (int, int) Points1 = (102, 19);
+        public static (int, int) Points2 = (106, 19);
         public static Postacie Postać;
         public static bool IsBarVisible = false;
         public static int DefLives;
@@ -50,6 +56,13 @@ namespace Touhou_19___Nekuskus
             public byte Direction;
             public bool exists = true;
             private int _hp;
+            bool IsInvincible = false;
+            void RemoveInvincibility(object MsTimeout)
+            {
+                if(!(MsTimeout is int)) throw new ArgumentException();
+                Thread.Sleep((int)MsTimeout);
+                IsInvincible = false;
+            }
             public int Hp //functions as damage for bullets since they don't have hp
             {
                 get
@@ -132,6 +145,12 @@ namespace Touhou_19___Nekuskus
             WriteHorizontal((91, 11), new string(' ', 29));
             WriteHorizontal((91, 12), new string(' ', 4));
             WriteHorizontal((113, 12), new string(' ', 7));
+            WriteHorizontal((91, 13), new string(' ', 29));
+            WriteHorizontal((91, 14), new string(' ', 29));
+            WriteHorizontal((91, 15), new string(' ', 4));
+            WriteHorizontal((110, 15), new string(' ', 10));
+            WriteHorizontal((91, 17), new string(' ', 4));
+            WriteHorizontal((108, 17), new string(' ', 12));
             i = 13;
             while(i < 49)
             {
@@ -155,6 +174,9 @@ namespace Touhou_19___Nekuskus
             WriteHorizontal((95, 7), "Score: 00000000000");
             WriteHorizontal((95, 10), "Lives:            ", ConsoleColor.DarkRed);
             WriteHorizontal((95, 12), "Bombs:            ", ConsoleColor.DarkBlue);
+            WriteHorizontal((95, 15), "Power:    /4.00", ConsoleColor.DarkRed);
+            WriteHorizontal((95, 17), "Graze:        ", ConsoleColor.DarkGreen);
+            WriteHorizontal((95, 19), "Points:    /   ", ConsoleColor.DarkGray);
             Console.BackgroundColor = ConsoleColor.Black;
             RenderBackgroundColors();
             Console.SetCursorPosition(0, 0);
@@ -198,9 +220,17 @@ namespace Touhou_19___Nekuskus
             }
             Console.ReadKey();
         }
+        #region Window Focus Externs
+        [DllImport("user32.dll", CharSet = CharSet.Auto, ExactSpelling = true)]
+        private static extern IntPtr GetForegroundWindow();
+
+        [DllImport("user32.dll", CharSet = CharSet.Auto, SetLastError = true)]
+        private static extern int GetWindowThreadProcessId(IntPtr handle, out int processId);
+        #endregion
         static void CheckKeys(decimal counter)
         {
             if(counter % Characters[0].ShotCounter != 0) return;
+
             if(Keyboard.IsKeyDown(Key.Right))
             {
                 if(!(Characters[0].Position.Item1 == 89))
@@ -254,11 +284,22 @@ namespace Touhou_19___Nekuskus
                             {
                                 List<GameObject> lasers = new List<GameObject>();
                                 int i = Characters[0].Position.Item2 - 1;
-                                while(i > (IsBarVisible ? 1 : 0))
+                                if(Characters[0].Position.Item1 != 0)
                                 {
-                                    lasers.Add(new GameObject((Characters[0].Position.Item1 - 1, i), ObjectType.PlayerBullet2, 100, 5));
-                                    lasers.Add(new GameObject((Characters[0].Position.Item1 + 1, i), ObjectType.PlayerBullet2, 100, 5));
-                                    i--;
+                                    while(i > (IsBarVisible ? 1 : 0))
+                                    {
+                                        lasers.Add(new GameObject((Characters[0].Position.Item1 - 1, i), ObjectType.PlayerBullet2, 100, 5));
+                                        i--;
+                                    }
+                                }
+                                i = Characters[0].Position.Item2 - 1;
+                                if(Characters[0].Position.Item1 != 89)
+                                {
+                                    while(i > (IsBarVisible ? 1 : 0))
+                                    {
+                                        lasers.Add(new GameObject((Characters[0].Position.Item1 + 1, i), ObjectType.PlayerBullet2, 100, 5));
+                                        i--;
+                                    }
                                 }
                                 lock(bullets_to_add)
                                 {
@@ -364,7 +405,24 @@ namespace Touhou_19___Nekuskus
             Thread t = new Thread(new ParameterizedThreadStart(GameProgress));
             t.Start(1);
             while(true)
-            {   
+            {
+                //startcheck:
+                // Checking focused Window
+                /*var ActivatedHandle = GetForegroundWindow();
+                var ProcId = Process.GetCurrentProcess().Id;
+                int ActiveProcId;
+                bool shouldcontinue = false;
+                GetWindowThreadProcessId(ActivatedHandle, out ActiveProcId);
+                if((ActivatedHandle == IntPtr.Zero && ProcId != ActiveProcId) && (t.ThreadState == System.Threading.ThreadState.Running || t.ThreadState == System.Threading.ThreadState.Stopped))
+                {
+                    //if(t.ThreadState != System.Threading.ThreadState.Stopped) t.Suspend();
+                    shouldcontinue = true;
+                }
+                if(t.ThreadState == System.Threading.ThreadState.Suspended)
+                {
+                    t.Resume();
+                }
+                if(shouldcontinue) goto startcheck;*/
                 CheckKeys(counter);
                 ProcessEnemyMoves(counter, ref bullets_to_add);
                 foreach(GameObject ch in Characters)
@@ -443,7 +501,7 @@ namespace Touhou_19___Nekuskus
                         {
                             bullets_to_delete.Add(b);
                         }
-                        if(b.Position == Characters[0].Position)
+                        if(b.Position == Characters[0].Position && b.Type == ObjectType.EnemyBullet)
                         {
                             CurLives -= 1;
                             b.exists = false;
@@ -462,9 +520,9 @@ namespace Touhou_19___Nekuskus
                     }
                 }
 #if DEBUG
-                WriteHorizontal((Bombs.Item1 - 7, Bombs.Item2 + 3), $"Bullets: {Bullets.Count}");
-                WriteHorizontal((Bombs.Item1 - 7, Bombs.Item2 + 4), $"bullets_to_add: {bullets_to_add.Count}");
-                WriteHorizontal((Bombs.Item1 - 7, Bombs.Item2 + 5), $"bullets_to delete: {bullets_to_delete.Count}");
+                WriteHorizontal((Bombs.Item1 - 7, Bombs.Item2 + 13), $"Bullets: {Bullets.Count}");
+                WriteHorizontal((Bombs.Item1 - 7, Bombs.Item2 + 14), $"bullets_to_add: {bullets_to_add.Count}");
+                WriteHorizontal((Bombs.Item1 - 7, Bombs.Item2 + 15), $"bullets_to delete: {bullets_to_delete.Count}");
 #endif
                 lock(bullets_to_add)
                 {
@@ -521,10 +579,10 @@ namespace Touhou_19___Nekuskus
             Direction = 4
         };
         Characters.Add(en1);
-            Characters.Add(en2);
-            Characters.Add(en3);
-            Characters.Add(en4);
-            Characters.Add(en5);
+        Characters.Add(en2);
+        Characters.Add(en3);
+        Characters.Add(en4);
+        Characters.Add(en5);
         }
         static void UnfreezeBullets()
         {
