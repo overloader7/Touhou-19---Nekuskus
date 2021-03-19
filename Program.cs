@@ -45,19 +45,38 @@ namespace Touhou_19___Nekuskus
             public int PerishTime;
             public int PerishCount = 1;
             public string Direction;
-            public GameObject((int, int) _Position, ObjectType _Type, decimal _MoveCounter)
+            public bool exists = true;
+            private int _hp;
+            public int Hp //functions as damage for bullets since they don't have hp
+            {
+                get
+                {
+                    if(Type == ObjectType.Player)
+                    {
+                        return CurLives;
+                    }
+                    else
+                    { 
+                        return _hp;
+                    }
+                }
+                set => _hp = value;
+            }
+            public GameObject((int, int) _Position, ObjectType _Type, decimal _MoveCounter, int _Health)
             {
                 Position = _Position;
                 Type = _Type;
                 MoveCounter = _MoveCounter;
+                Hp = _Health;
             }
-            public GameObject((int, int) _Position, ObjectType _Type, decimal _MoveCounter, string _Direction, int _PerishTimer = 0)
+            public GameObject((int, int) _Position, ObjectType _Type, decimal _MoveCounter, string _Direction, int Damage, int _PerishTimer = 0)
             {
                 Position = _Position;
                 Type = _Type;
                 MoveCounter = _MoveCounter;
                 PerishTime = _PerishTimer;
                 Direction = _Direction;
+                _hp = Damage;
             }
         }
         public static List<GameObject> Bullets = new List<GameObject>();
@@ -239,6 +258,18 @@ namespace Touhou_19___Nekuskus
 
             }
         }
+        static void ProcessEnemyMoves(decimal counter, ref List<GameObject> bullets_to_add)
+        {
+            foreach(GameObject ch in Characters)
+            {
+                if(ch.Type == ObjectType.Player) continue;
+                if(counter % ch.MoveCounter == 0)
+                {
+                    GameObject enemyBullet = new GameObject((ch.Position.Item1, ch.Position.Item2 + 1), ObjectType.EnemyBullet, 1m, "forward", 1);
+                    Bullets.Add(enemyBullet);
+                }
+            }
+        }
         static void MainLoop()
         {
             try
@@ -252,7 +283,7 @@ namespace Touhou_19___Nekuskus
             Console.WriteLine("Started MainLoop()!");
             ClearGameSpace();
             DefLives = CurLives = 5;
-            Characters.Add(new GameObject((50, 35), ObjectType.Player, 1));
+            Characters.Add(new GameObject((50, 35), ObjectType.Player, 1, DefLives));
             switch(Postać)
             {
                 case Postacie.Reimu:
@@ -283,8 +314,14 @@ namespace Touhou_19___Nekuskus
                 }
                 List<GameObject> bullets_to_add = new List<GameObject>();
                 List<GameObject> bullets_to_delete = new List<GameObject>();
+                ProcessEnemyMoves(counter, ref bullets_to_add);
                 foreach(GameObject b in Bullets)
                 {
+                    if(!b.exists)
+                    {
+                        bullets_to_delete.Add(b);
+                        continue;
+                    }
                     WriteHorizontal((b.Position.Item1, b.Position.Item2), (b.Type == ObjectType.PlayerBullet) ? (Postać == Postacie.Reimu) ? "." : "|" : "#");
                     b.PerishCount += 1;      
                     if(b.Position.Item2 - 1 > (IsBarVisible ? 1 : 0))
@@ -292,6 +329,23 @@ namespace Touhou_19___Nekuskus
                         switch (b.Type)
                         {
                             case ObjectType.EnemyBullet:
+                                if(b.Position.Item2 != 49)
+                                {
+                                    if(b.exists)
+                                    {
+                                        switch (b.Direction)
+                                        {
+                                            case "left":
+                                                bullets_to_add.Add(new GameObject((b.Position.Item1, b.Position.Item2 + 1), ObjectType.EnemyBullet, 1, "forward", 1));
+                                                break;
+                                            case "forward":
+                                                if(b.exists) bullets_to_add.Add(new GameObject((b.Position.Item1, b.Position.Item2 + 1), ObjectType.EnemyBullet, 1, "forward", 1));
+                                                break;
+                                            case "right":
+                                                break;
+                                        }
+                                    }
+                                }
                                 break;
                             case ObjectType.PlayerBullet:
                                 if(Postać == Postacie.Reimu)
@@ -328,6 +382,22 @@ namespace Touhou_19___Nekuskus
                 WriteHorizontal((Bombs.Item1 - 7, Bombs.Item2 + 4), $"bullets_to_add: {bullets_to_add.Count}");
                 WriteHorizontal((Bombs.Item1 - 7, Bombs.Item2 + 5), $"bullets_to delete: {bullets_to_delete.Count}");
 #endif
+
+                foreach(GameObject b in Bullets)
+                {
+                    if(b.Position == Characters[0].Position)
+                    {
+                        CurLives -= 1;
+                        foreach(GameObject b1 in Bullets)
+                        {
+                            if(b.Type == ObjectType.EnemyBullet)
+                            {
+                                b.exists = false;
+                                bullets_to_delete.Add(b);
+                            }
+                        }
+                    }
+                }
                 foreach(GameObject b in bullets_to_add)
                 {
                     Bullets.Add(b);
@@ -336,8 +406,12 @@ namespace Touhou_19___Nekuskus
                 {
                     Bullets.Remove(b);
                 }
+                if(CurLives == 0)
+                {
+                    ClearGameSpace();
+                }
                 Console.BackgroundColor = ConsoleColor.DarkCyan;
-                WriteHorizontal((Lives.Item1, Lives.Item2), new string('*', CurLives - 1), ConsoleColor.DarkRed);
+                WriteHorizontal((Lives.Item1, Lives.Item2), new string('*', CurLives - 1) + new string(' ', 11 - CurLives), ConsoleColor.DarkRed);
                 WriteHorizontal((Bombs.Item1, Bombs.Item2), new string('*', CurBombs), ConsoleColor.DarkBlue);
                 Console.BackgroundColor = ConsoleColor.Black;
                 counter += 0.5m;
@@ -353,7 +427,7 @@ namespace Touhou_19___Nekuskus
             Console.BackgroundColor = ConsoleColor.Black;
 
             //Creating enemies and bullets starts here uwu
-            GameObject enemy = new GameObject((45, 5), ObjectType.Enemy, 2m);
+            GameObject enemy = new GameObject((45, 5), ObjectType.Enemy, 4m, 5);
             Characters.Add(enemy);
 
         }
