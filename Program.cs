@@ -171,7 +171,7 @@ namespace Touhou_19___Nekuskus
             }
             else
             {
-                WriteHorizontal((0, 15), new string(' ', 100));
+                WriteHorizontal((0, 15), new string(' ', 90));
                 goto wyborpostaci;
             }
             Console.ReadKey();
@@ -209,20 +209,29 @@ namespace Touhou_19___Nekuskus
             }
             if(Keyboard.IsKeyDown(Key.Z))
             {
-                switch(Postać)
+                if(Characters[0].Position.Item2 > 1)
                 {
-                    case Postacie.Reimu:
-                        GameObject ball1 = new GameObject((Characters[0].Position.Item1 - 1, Characters[0].Position.Item2 - 1), ObjectType.PlayerBullet, 1m, "left", 1);
-                        GameObject ball2 = new GameObject((Characters[0].Position.Item1, Characters[0].Position.Item2 - 1), ObjectType.PlayerBullet, 1m, "forward", 1);
-                        GameObject ball3 = new GameObject((Characters[0].Position.Item1 + 1, Characters[0].Position.Item2 - 1), ObjectType.PlayerBullet, 1m, "right", 1);
-                        Bullets.Add(ball1);
-                        Bullets.Add(ball2);
-                        Bullets.Add(ball3);
-                        break;
-                    case Postacie.Marisa:
-                        GameObject laser = new GameObject((Characters[0].Position.Item1, Characters[0].Position.Item2 - 1), ObjectType.PlayerBullet, 0.5m, "forward", 2);
-                        Bullets.Add(laser);
-                        break;
+                    switch(Postać)
+                    {
+                        case Postacie.Reimu:
+                            if(Characters[0].Position.Item1 > 0)
+                            { 
+                                GameObject ball1 = new GameObject((Characters[0].Position.Item1 - 1, Characters[0].Position.Item2 - 1), ObjectType.PlayerBullet, 1m, "left", 1);
+                                Bullets.Add(ball1);
+                            }
+                            GameObject ball2 = new GameObject((Characters[0].Position.Item1, Characters[0].Position.Item2 - 1), ObjectType.PlayerBullet, 1m, "forward", 1);
+                            Bullets.Add(ball2);
+                            if(Characters[0].Position.Item1 < 89)
+                            {
+                                GameObject ball3 = new GameObject((Characters[0].Position.Item1 + 1, Characters[0].Position.Item2 - 1), ObjectType.PlayerBullet, 1m, "right", 1);
+                                Bullets.Add(ball3);
+                            }
+                            break;
+                        case Postacie.Marisa:
+                            GameObject laser = new GameObject((Characters[0].Position.Item1, Characters[0].Position.Item2 - 1), ObjectType.PlayerBullet, 0.5m, "forward", 2);
+                            Bullets.Add(laser);
+                            break;
+                    }
                 }
             }
             if(Keyboard.IsKeyDown(Key.X))
@@ -278,33 +287,36 @@ namespace Touhou_19___Nekuskus
                 {
                     WriteHorizontal((b.Position.Item1, b.Position.Item2), (b.Type == ObjectType.PlayerBullet) ? (Postać == Postacie.Reimu) ? "." : "|" : "#");
                     b.PerishCount += 1;      
-                    if(b.Position.Item2 - 1 != (IsBarVisible ? 1 : 0 ))
-                    switch (b.Type)
+                    if(b.Position.Item2 - 1 > (IsBarVisible ? 1 : 0))
                     {
-                        case ObjectType.EnemyBullet:
-                            break;
-                        case ObjectType.PlayerBullet:
-                            if(Postać == Postacie.Reimu)
-                            {
-                                switch(b.Direction)
+                        switch (b.Type)
+                        {
+                            case ObjectType.EnemyBullet:
+                                break;
+                            case ObjectType.PlayerBullet:
+                                if(Postać == Postacie.Reimu)
                                 {
-                                        case "left":
-                                            if(b.Position.Item1 != 0)
-                                            bullets_to_add.Add(new GameObject((b.Position.Item1 - 1, b.Position.Item2 - 1), ObjectType.PlayerBullet, 1m, "left", 1));
-                                            break;
-                                        case "forward":
-                                            bullets_to_add.Add(new GameObject((b.Position.Item1, b.Position.Item2 - 1), ObjectType.PlayerBullet, 1m, "forward", 1));
-                                            break;
-                                        case "right":
-                                            bullets_to_add.Add(new GameObject((b.Position.Item1 + 1, b.Position.Item2 - 1), ObjectType.PlayerBullet, 1m, "right", 1));
-                                            break;
+                                    switch(b.Direction)
+                                    {
+                                            case "left":
+                                                if(b.Position.Item1 != 0)
+                                                bullets_to_add.Add(new GameObject((b.Position.Item1 - 1, b.Position.Item2 - 1), ObjectType.PlayerBullet, 1m, "left", 1));
+                                                break;
+                                            case "forward":
+                                                bullets_to_add.Add(new GameObject((b.Position.Item1, b.Position.Item2 - 1), ObjectType.PlayerBullet, 1m, "forward", 1));
+                                                break;
+                                            case "right":
+                                                if(b.Position.Item1 != 89)
+                                                bullets_to_add.Add(new GameObject((b.Position.Item1 + 1, b.Position.Item2 - 1), ObjectType.PlayerBullet, 1m, "right", 1));
+                                                break;
+                                    }
                                 }
-                            }
-                            else if(Postać == Postacie.Marisa)
-                            {
-                                bullets_to_add.Add(new GameObject((b.Position.Item1, b.Position.Item2 - 1), ObjectType.PlayerBullet, 0.5m, "forward" ,2));
-                            }
-                            break;
+                                else if(Postać == Postacie.Marisa)
+                                {
+                                    bullets_to_add.Add(new GameObject((b.Position.Item1, b.Position.Item2 - 1), ObjectType.PlayerBullet, 0.5m, "forward" ,2));
+                                }
+                                break;
+                        }
                     }
                     if(b.PerishCount >= b.PerishTime)
                     {
