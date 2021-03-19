@@ -24,10 +24,10 @@ namespace Touhou_19___Nekuskus
         public static int DefBombs;
         public static int CurLives;
         public static int CurBombs;
-        public static char Hitbox;
-        public static char BossHitbox;
         public static ConsoleColor CharacterColor;
         public static decimal counter = 1.0m;
+        public static List<GameObject> bullets_to_add = new List<GameObject>();
+        public static List<GameObject> bullets_to_delete = new List<GameObject>();
 
         public enum ObjectType
         {
@@ -42,22 +42,36 @@ namespace Touhou_19___Nekuskus
             public (int, int) Position;
             public ObjectType Type;
             public decimal MoveCounter;
-            public int PerishTime;
             public int PerishCount = 1;
+            public int PerishTime;
             public string Direction;
-            public GameObject((int, int) _Position, ObjectType _Type, decimal _MoveCounter)
+            public char Hitbox;
+            public bool HasReproduced;
+            public GameObject((int, int) _Position, ObjectType _Type, decimal _MoveCounter, char _Hitbox)
             {
                 Position = _Position;
                 Type = _Type;
                 MoveCounter = _MoveCounter;
+                Hitbox = _Hitbox;
             }
-            public GameObject((int, int) _Position, ObjectType _Type, decimal _MoveCounter, string _Direction, int _PerishTimer = 0)
+            public GameObject((int, int) _Position, ObjectType _Type, decimal _MoveCounter, string _Direction, char _Hitbox, int _PerishTime)
             {
                 Position = _Position;
                 Type = _Type;
                 MoveCounter = _MoveCounter;
-                PerishTime = _PerishTimer;
                 Direction = _Direction;
+                Hitbox = _Hitbox;
+                PerishTime = _PerishTime;
+                HasReproduced = false;
+            }
+            public override bool Equals(object obj)
+            {
+                if(!(obj is GameObject)) return false;
+                return this.Position == ((GameObject)obj).Position && this.Direction == ((GameObject)obj).Direction;
+            }
+            ~GameObject()
+            {
+
             }
         }
         public static List<GameObject> Bullets = new List<GameObject>();
@@ -171,7 +185,7 @@ namespace Touhou_19___Nekuskus
             }
             else
             {
-                WriteHorizontal((0, 15), new string(' ', 100));
+                WriteHorizontal((0, 15), new string(' ', 90));
                 goto wyborpostaci;
             }
             Console.ReadKey();
@@ -212,15 +226,24 @@ namespace Touhou_19___Nekuskus
                 switch(Postać)
                 {
                     case Postacie.Reimu:
-                        GameObject ball1 = new GameObject((Characters[0].Position.Item1 - 1, Characters[0].Position.Item2 - 1), ObjectType.PlayerBullet, 1m, "left", 1);
-                        GameObject ball2 = new GameObject((Characters[0].Position.Item1, Characters[0].Position.Item2 - 1), ObjectType.PlayerBullet, 1m, "forward", 1);
-                        GameObject ball3 = new GameObject((Characters[0].Position.Item1 + 1, Characters[0].Position.Item2 - 1), ObjectType.PlayerBullet, 1m, "right", 1);
-                        Bullets.Add(ball1);
-                        Bullets.Add(ball2);
-                        Bullets.Add(ball3);
+                        if(Characters[0].Position.Item2 != (IsBarVisible ? 1 : 0))
+                        {
+                            if(Characters[0].Position.Item1 != 0)
+                            {
+                                GameObject ball1 = new GameObject((Characters[0].Position.Item1 - 1, Characters[0].Position.Item2 - 1), ObjectType.PlayerBullet, 1m, "left", '.', 1);
+                                Bullets.Add(ball1);
+                            }
+                            GameObject ball2 = new GameObject((Characters[0].Position.Item1, Characters[0].Position.Item2 - 1), ObjectType.PlayerBullet, 1m, "forward", '.', 1);
+                            Bullets.Add(ball2);
+                            if(Characters[0].Position.Item1 != 89)
+                            {
+                                GameObject ball3 = new GameObject((Characters[0].Position.Item1 + 1, Characters[0].Position.Item2 - 1), ObjectType.PlayerBullet, 1m, "right", '.', 1);
+                                Bullets.Add(ball3);
+                            }
+                        }
                         break;
                     case Postacie.Marisa:
-                        GameObject laser = new GameObject((Characters[0].Position.Item1, Characters[0].Position.Item2 - 1), ObjectType.PlayerBullet, 0.5m, "forward", 2);
+                        GameObject laser = new GameObject((Characters[0].Position.Item1, Characters[0].Position.Item2 - 1), ObjectType.PlayerBullet, 0.5m, "forward", '|', 2);
                         Bullets.Add(laser);
                         break;
                 }
@@ -243,18 +266,16 @@ namespace Touhou_19___Nekuskus
             Console.WriteLine("Started MainLoop()!");
             ClearGameSpace();
             DefLives = CurLives = 5;
-            Characters.Add(new GameObject((50, 35), ObjectType.Player, 1));
+            Characters.Add(new GameObject((50, 35), ObjectType.Player, 1, Postać == Postacie.Reimu ? 'R' : 'M'));
             switch(Postać)
             {
                 case Postacie.Reimu:
                     DefBombs = CurBombs = 3;
-                    Hitbox = 'R';
                     Characters[0].MoveCounter = 1m;
                     CharacterColor = ConsoleColor.Red;
                     break;
                 case Postacie.Marisa:
                     DefBombs = CurBombs = 2;
-                    Hitbox = 'M';
                     Characters[0].MoveCounter = 0.5m;
                     CharacterColor = ConsoleColor.Yellow;
                     break;
@@ -263,48 +284,62 @@ namespace Touhou_19___Nekuskus
             t.Start(1);
             while(true)
             {
-                if(counter == 8)
-                {
-                    counter = 1;
-                }
                 CheckKeys(counter);
                 foreach(GameObject ch in Characters)
                 {
-                    WriteHorizontal((ch.Position.Item1, ch.Position.Item2), (ch.Type == ObjectType.Player) ? Hitbox.ToString() : (ch.Type == ObjectType.Boss) ? BossHitbox.ToString() : "E" , CharacterColor);
+                    WriteHorizontal((ch.Position.Item1, ch.Position.Item2), ch.Hitbox.ToString(), ch.Type == ObjectType.Player ? Postać == Postacie.Reimu ? ConsoleColor.Red : ConsoleColor.Yellow : ch.Type == ObjectType.Boss ? ConsoleColor.DarkMagenta : ConsoleColor.White);
                 }
-                List<GameObject> bullets_to_add = new List<GameObject>();
-                List<GameObject> bullets_to_delete = new List<GameObject>();
                 foreach(GameObject b in Bullets)
                 {
                     WriteHorizontal((b.Position.Item1, b.Position.Item2), (b.Type == ObjectType.PlayerBullet) ? (Postać == Postacie.Reimu) ? "." : "|" : "#");
-                    b.PerishCount += 1;      
-                    if(b.Position.Item2 - 1 != (IsBarVisible ? 1 : 0 ))
-                    switch (b.Type)
+                    b.PerishCount += 1;
+                    if(Bullets.Count < 1500)
                     {
-                        case ObjectType.EnemyBullet:
-                            break;
-                        case ObjectType.PlayerBullet:
-                            if(Postać == Postacie.Reimu)
+                        if(b.Position.Item2 - 1 != (IsBarVisible ? 1 : 0 ) && !b.HasReproduced)
+                        {
+                            switch(b.Type)
                             {
-                                switch(b.Direction)
-                                {
-                                        case "left":
-                                            if(b.Position.Item1 != 0)
-                                            bullets_to_add.Add(new GameObject((b.Position.Item1 - 1, b.Position.Item2 - 1), ObjectType.PlayerBullet, 1m, "left", 1));
+                                case ObjectType.PlayerBullet:
+                                    switch(Postać)
+                                    {
+                                        case Postacie.Reimu:
+                                            switch(b.Direction)
+                                            {
+                                                case "left":
+                                                    if(b.Position.Item1 != 0)
+                                                        bullets_to_add.Add(new GameObject((b.Position.Item1 - 1, b.Position.Item2 - 1), ObjectType.PlayerBullet, 1m, "left", '.', 1));
+                                                    break;
+                                                case "forward":
+                                                    bullets_to_add.Add(new GameObject((b.Position.Item1, b.Position.Item2 - 1), ObjectType.PlayerBullet, 1m, "forward", '.', 1));
+                                                    break;
+                                                case "right":
+                                                    if(b.Position.Item1 != 89)
+                                                        bullets_to_add.Add(new GameObject((b.Position.Item1 + 1, b.Position.Item2 - 1), ObjectType.PlayerBullet, 1m, "right", '.', 1));
+                                                    break;  
+                                            }
+                                            b.HasReproduced = true;
                                             break;
-                                        case "forward":
-                                            bullets_to_add.Add(new GameObject((b.Position.Item1, b.Position.Item2 - 1), ObjectType.PlayerBullet, 1m, "forward", 1));
+                                        case Postacie.Marisa:
+                                            bullets_to_add.Add(new GameObject((b.Position.Item1, b.Position.Item2 - 1), ObjectType.PlayerBullet, 0.5m, "forward", '|', 2));
+                                            b.HasReproduced = true;
                                             break;
-                                        case "right":
-                                            bullets_to_add.Add(new GameObject((b.Position.Item1 + 1, b.Position.Item2 - 1), ObjectType.PlayerBullet, 1m, "right", 1));
-                                            break;
-                                }
+                                        break;
+                                    }
+                                    break;
+                                case ObjectType.EnemyBullet:
+                                    break;
                             }
-                            else if(Postać == Postacie.Marisa)
-                            {
-                                bullets_to_add.Add(new GameObject((b.Position.Item1, b.Position.Item2 - 1), ObjectType.PlayerBullet, 0.5m, "forward" ,2));
-                            }
-                            break;
+                        
+                        }
+                        else
+                        {
+                            b.HasReproduced = true;
+                        }
+                    }
+                    else
+                    {
+                        Bullets.Clear();
+                        bullets_to_add.Clear();
                     }
                     if(b.PerishCount >= b.PerishTime)
                     {
@@ -315,6 +350,7 @@ namespace Touhou_19___Nekuskus
                 {
                     Bullets.Add(b);
                 }
+
                 foreach(GameObject b in bullets_to_delete)
                 {
                     Bullets.Remove(b);
@@ -324,6 +360,16 @@ namespace Touhou_19___Nekuskus
                 WriteHorizontal((Bombs.Item1, Bombs.Item2), new string('*', CurBombs), ConsoleColor.DarkBlue);
                 Console.BackgroundColor = ConsoleColor.Black;
                 counter += 0.5m;
+                if(counter % 8 == 0)
+                {
+                    GC.Collect();
+                    GC.WaitForPendingFinalizers();
+                }
+                /*if()
+                {
+                    Bullets.Clear();
+                    bullets_to_add.Clear();
+                }*/
                 Thread.Sleep(33);
                 ClearGameSpace();
             }
@@ -336,7 +382,7 @@ namespace Touhou_19___Nekuskus
             Console.BackgroundColor = ConsoleColor.Black;
 
             //Creating enemies and bullets starts here uwu
-            GameObject enemy = new GameObject((45, 5), ObjectType.Enemy, 2m);
+            GameObject enemy = new GameObject((45, 5), ObjectType.Enemy, 2m, 'E');
             Characters.Add(enemy);
 
         }
