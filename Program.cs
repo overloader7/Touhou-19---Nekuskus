@@ -28,7 +28,7 @@ namespace Touhou_19___Nekuskus
         public static char BossHitbox;
         public static ConsoleColor CharacterColor;
         public static decimal counter = 1.0m;
-
+        public static bool BulletFreeze = false;
         public enum ObjectType
         {
             Player,
@@ -262,7 +262,7 @@ namespace Touhou_19___Nekuskus
         {
             foreach(GameObject ch in Characters)
             {
-                if(counter % ch.MoveCounter == 0 && ch.Type != ObjectType.Player && ch.Position.Item2 + 1 < 49)
+                if(counter % ch.MoveCounter == 0 && ch.Type != ObjectType.Player && ch.Position.Item2 + 1 < 49 && !BulletFreeze)
                 {
                     switch(ch.Direction)
                     {
@@ -358,7 +358,7 @@ namespace Touhou_19___Nekuskus
                             switch (b.Type)
                             {
                                 case ObjectType.EnemyBullet:
-                                    if(b.Position.Item2 != 49)
+                                    if(b.Position.Item2 != 49 && !BulletFreeze)
                                     {
                                         switch (b.Direction)
                                         {
@@ -382,7 +382,7 @@ namespace Touhou_19___Nekuskus
                                                 bullets_to_add.Add(new GameObject((b.Position.Item1 + 1, b.Position.Item2), ObjectType.EnemyBullet, b.MoveCounter, "fullright", 1));
                                                 break;
                                         }
-                                   }
+                                    }
                                     break;
                                 case ObjectType.PlayerBullet:
                                     if(Postać == Postacie.Reimu)
@@ -420,12 +420,16 @@ namespace Touhou_19___Nekuskus
                         if(b.Position == Characters[0].Position)
                         {
                             CurLives -= 1;
+                            b.exists = false;
                             foreach(GameObject b1 in Bullets)
                             {
-                                if(b.Type == ObjectType.EnemyBullet)
+                                if(b1.Type == ObjectType.EnemyBullet)
                                 {
-                                    b.exists = false;
+                                    b1.exists = false;
                                     bullets_to_delete.Add(b);
+                                    BulletFreeze = true;
+                                    Thread unfreeze = new Thread(new ThreadStart(UnfreezeBullets));
+                                    unfreeze.Start();
                                 }
                             }
                         }
@@ -481,6 +485,11 @@ namespace Touhou_19___Nekuskus
             Characters.Add(en3);
             Characters.Add(en4);
             Characters.Add(en5);
+        }
+        static void UnfreezeBullets()
+        {
+            Thread.Sleep(1500);
+            BulletFreeze = false;
         }
     }
 }
