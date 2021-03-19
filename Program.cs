@@ -315,7 +315,7 @@ namespace Touhou_19___Nekuskus
                 WriteHorizontal((Bombs.Item1 - 7, Bombs.Item2 + 3), $"Bullets: {Bullets.Count}");
                 WriteHorizontal((Bombs.Item1 - 7, Bombs.Item2 + 4), $"bullets_to_add: {bullets_to_add.Count}");
                 WriteHorizontal((Bombs.Item1 - 7, Bombs.Item2 + 5), $"bullets_to delete: {bullets_to_delete.Count}");
-#if DEBUG
+#endif
                 foreach(GameObject b in bullets_to_add)
                 {
                     Bullets.Add(b);
