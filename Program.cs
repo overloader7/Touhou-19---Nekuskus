@@ -57,6 +57,8 @@ namespace Touhou_19___Nekuskus
             public bool exists = true;
             private int _hp;
             bool IsInvincible = false;
+            Func<int> MoveBehavior;
+            
             void RemoveInvincibility(object MsTimeout)
             {
                 if(!(MsTimeout is int)) throw new ArgumentException();
@@ -220,13 +222,6 @@ namespace Touhou_19___Nekuskus
             }
             Console.ReadKey();
         }
-        #region Window Focus Externs
-        [DllImport("user32.dll", CharSet = CharSet.Auto, ExactSpelling = true)]
-        private static extern IntPtr GetForegroundWindow();
-
-        [DllImport("user32.dll", CharSet = CharSet.Auto, SetLastError = true)]
-        private static extern int GetWindowThreadProcessId(IntPtr handle, out int processId);
-        #endregion
         static void CheckKeys(decimal counter)
         {
             if(counter % Characters[0].ShotCounter != 0) return;
@@ -373,8 +368,13 @@ namespace Touhou_19___Nekuskus
                 }
             }
         }
+        [DllImport("user32.dll")]
+        static extern IntPtr GetForegroundWindow();
+        [DllImport("user32.dll", EntryPoint = "FindWindow", SetLastError = true)]
+        static extern IntPtr FindWindowByCaption(IntPtr zeroOnly, string lpWindowName);
         static void MainLoop()
         {
+            #region MainLoop Init
             try
             {
                 Console.CursorVisible = false;
@@ -404,25 +404,25 @@ namespace Touhou_19___Nekuskus
             }
             Thread t = new Thread(new ParameterizedThreadStart(GameProgress));
             t.Start(1);
+            #endregion
+            string originalTitle = Console.Title;
+            string uniqueTitle = Guid.NewGuid().ToString();
+            Console.Title = uniqueTitle;
+            IntPtr handle = FindWindowByCaption(IntPtr.Zero, uniqueTitle);
+            Console.Title = originalTitle;
             while(true)
             {
-                //startcheck:
+                startcheck:
                 // Checking focused Window
-                /*var ActivatedHandle = GetForegroundWindow();
-                var ProcId = Process.GetCurrentProcess().Id;
-                int ActiveProcId;
-                bool shouldcontinue = false;
-                GetWindowThreadProcessId(ActivatedHandle, out ActiveProcId);
-                if((ActivatedHandle == IntPtr.Zero && ProcId != ActiveProcId) && (t.ThreadState == System.Threading.ThreadState.Running || t.ThreadState == System.Threading.ThreadState.Stopped))
+
+                IntPtr GFW = GetForegroundWindow();
+                
+                if(handle != GFW)
                 {
-                    //if(t.ThreadState != System.Threading.ThreadState.Stopped) t.Suspend();
-                    shouldcontinue = true;
+                    goto startcheck;
                 }
-                if(t.ThreadState == System.Threading.ThreadState.Suspended)
-                {
-                    t.Resume();
-                }
-                if(shouldcontinue) goto startcheck;*/
+                
+
                 CheckKeys(counter);
                 ProcessEnemyMoves(counter, ref bullets_to_add);
                 foreach(GameObject ch in Characters)
@@ -523,6 +523,8 @@ namespace Touhou_19___Nekuskus
                 WriteHorizontal((Bombs.Item1 - 7, Bombs.Item2 + 13), $"Bullets: {Bullets.Count}");
                 WriteHorizontal((Bombs.Item1 - 7, Bombs.Item2 + 14), $"bullets_to_add: {bullets_to_add.Count}");
                 WriteHorizontal((Bombs.Item1 - 7, Bombs.Item2 + 15), $"bullets_to delete: {bullets_to_delete.Count}");
+                WriteHorizontal((Bombs.Item1 - 7, Bombs.Item2 + 16), $"handle: {handle}");
+                WriteHorizontal((Bombs.Item1 - 7, Bombs.Item2 + 17), $"GFW(): {GFW}");
 #endif
                 lock(bullets_to_add)
                 {
