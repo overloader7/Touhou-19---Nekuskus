@@ -1,4 +1,4 @@
-﻿using System;
+﻿﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
@@ -10,16 +10,9 @@ namespace Touhou_19___Nekuskus
 {
     static class Program
     {
-        public enum Postacie
-        {
-            Reimu,
-            Marisa
-        }
         
         public static (int, int) Stage = (102, 3);
         
-
-
         public static (int, int) Score = (102, 7);
         public static int score;
 
@@ -56,10 +49,14 @@ namespace Touhou_19___Nekuskus
         public static decimal counter = 1.0m;
         public static bool BulletFreeze = false;
         
-        public static List<GameObject> bullets_to_add = new List<GameObject>();
-        public static List<GameObject> bullets_to_delete = new List<GameObject>();
-        public enum ObjectType
-        {
+        public static Stack<GameObject> Bullets    = new Stack<GameObject>();
+        public static List<GameObject>  Characters = new List<GameObject>();
+		
+        public enum Postacie{
+            Reimu,
+            Marisa
+        }
+        public enum ObjectType{
             Player,
             Enemy,
             Boss,
@@ -121,8 +118,6 @@ namespace Touhou_19___Nekuskus
                 _hp = Damage;
             }
         }
-        public static List<GameObject> Bullets = new List<GameObject>();
-        public static List<GameObject> Characters = new List<GameObject>();
 
         static void WriteHorizontal(ValueTuple<int, int> coords, string text, ConsoleColor color = ConsoleColor.White) //1 is col, 2 is row
         {
@@ -161,25 +156,25 @@ namespace Touhou_19___Nekuskus
                 WriteHorizontal((91, i), new string(' ', 29));
                 i++;
             }
-            WriteHorizontal((91, 7), new string(' ', 4));
-            WriteHorizontal((113, 7), new string(' ', 7));
-            WriteHorizontal((91, 8), new string(' ', 29));
-            WriteHorizontal((91, 9), new string(' ', 29));
-            WriteHorizontal((91, 10), new string(' ', 4));
+            WriteHorizontal((91, 7),   new string(' ', 4));
+            WriteHorizontal((113, 7),  new string(' ', 7));
+            WriteHorizontal((91, 8),   new string(' ', 29));
+            WriteHorizontal((91, 9),   new string(' ', 29));
+            WriteHorizontal((91, 10),  new string(' ', 4));
             WriteHorizontal((113, 10), new string(' ', 7));
-            WriteHorizontal((91, 8), new string(' ', 29));
-            WriteHorizontal((91, 11), new string(' ', 29));
-            WriteHorizontal((91, 12), new string(' ', 4));
+            WriteHorizontal((91, 8),   new string(' ', 29));
+            WriteHorizontal((91, 11),  new string(' ', 29));
+            WriteHorizontal((91, 12),  new string(' ', 4));
             WriteHorizontal((113, 12), new string(' ', 7));
-            WriteHorizontal((91, 13), new string(' ', 29));
-            WriteHorizontal((91, 14), new string(' ', 29));
-            WriteHorizontal((91, 15), new string(' ', 4));
+            WriteHorizontal((91, 13),  new string(' ', 29));
+            WriteHorizontal((91, 14),  new string(' ', 29));
+            WriteHorizontal((91, 15),  new string(' ', 4));
             WriteHorizontal((110, 15), new string(' ', 10));
-            WriteHorizontal((91, 16), new string(' ', 29));
-            WriteHorizontal((91, 17), new string(' ', 4));
+            WriteHorizontal((91, 16),  new string(' ', 29));
+            WriteHorizontal((91, 17),  new string(' ', 4));
             WriteHorizontal((108, 17), new string(' ', 12));
-            WriteHorizontal((91, 18), new string(' ', 29));
-            WriteHorizontal((91, 19), new string(' ', 4));
+            WriteHorizontal((91, 18),  new string(' ', 29));
+            WriteHorizontal((91, 19),  new string(' ', 4));
             WriteHorizontal((108, 19), new string(' ', 12));
             i = 20;
             while(i < 49)
@@ -221,6 +216,9 @@ namespace Touhou_19___Nekuskus
             }
             Console.SetCursorPosition(0, 0);
         }
+		
+		
+		
         [STAThread]
         static void Main(string[] args)
         {
@@ -250,7 +248,18 @@ namespace Touhou_19___Nekuskus
             }
             Console.ReadKey();
         }
-        static void CheckKeys(decimal counter)
+		static void newBullet(readonly ref GameObject newObj)
+		{
+			bool added = false;
+			foreach(GameObject o in Bullets)
+				if(!o.exists){
+					o = newObj;
+					added = true;
+					break;}//heretical } on code line
+			if(!added)
+				Bullets.Push(newObj);
+		}
+		static void CheckKeys(decimal counter)
         {
             if(counter % Characters[0].ShotCounter != 0) return;
 
@@ -289,60 +298,39 @@ namespace Touhou_19___Nekuskus
                     switch(Postać)
                     {
                         case Postacie.Reimu:
-                            if(Characters[0].Position.Item1 > 0)
-                            { 
+                            if(Characters[0].Position.Item1 > 0){ 
                                 GameObject orb1 = new GameObject((Characters[0].Position.Item1 - 1, Characters[0].Position.Item2 - 1), ObjectType.PlayerBullet, 1m, 7, 1);
-                                Bullets.Add(orb1);
+                                newBullet(orb1);
                             }
                             GameObject orb2 = new GameObject((Characters[0].Position.Item1, Characters[0].Position.Item2 - 1), ObjectType.PlayerBullet, 1m, 8, 1);
-                            Bullets.Add(orb2);
-                            if(Characters[0].Position.Item1 < 89)
-                            {
+                            newBullet(orb2);
+                            if(Characters[0].Position.Item1 < 89){
                                 GameObject orb3 = new GameObject((Characters[0].Position.Item1 + 1, Characters[0].Position.Item2 - 1), ObjectType.PlayerBullet, 1m, 9, 1);
-                                Bullets.Add(orb3);
+                                newBullet(orb3);
                             }
                             break;
                         case Postacie.Marisa:
-                            void AddLasers()
-                            {
                                 List<GameObject> lasers = new List<GameObject>();
                                 int i = Characters[0].Position.Item2 - 1;
-                                if(Characters[0].Position.Item1 != 0)
-                                {
-                                    while(i > (IsBarVisible ? 1 : 0))
-                                    {
+                                if(Characters[0].Position.Item1 != 0){
+                                    while(i > (IsBarVisible ? 1 : 0)){
                                         lasers.Add(new GameObject((Characters[0].Position.Item1 - 1, i), ObjectType.PlayerBullet2, 100, 5, 5)); //5 equals none
                                         i--;
                                     }
                                 }
                                 i = Characters[0].Position.Item2 - 1;
-                                if(Characters[0].Position.Item1 != 89)
-                                {
+                                if(Characters[0].Position.Item1 != 89){
                                     while(i > (IsBarVisible ? 1 : 0))
                                     {
                                         lasers.Add(new GameObject((Characters[0].Position.Item1 + 1, i), ObjectType.PlayerBullet2, 100, 5, 5)); //5 equals none
                                         i--;
                                     }
                                 }
-                                lock(bullets_to_add)
-                                {
-                                    foreach(GameObject l in lasers)
-                                    {
-                                        if(counter % 30 < 16)
-                                        bullets_to_add.Add(l);
-                                    }
-                                }
-                            }
-                            if(true)
-                            {
-                                Thread t = new Thread(new ThreadStart(AddLasers));
-                                t.Start();
-                            }
-                            else
-                            {
-                            }
+								foreach(GameObject l in lasers)
+									if(counter % 30 < 16)
+										newBullet(l);
                             GameObject arrows = new GameObject((Characters[0].Position.Item1, Characters[0].Position.Item2 - 1), ObjectType.PlayerBullet, 0.5m, 8, 2);
-                            Bullets.Add(arrows);
+                            newBullet(arrows);
                             break;
                     }
                 }
@@ -352,7 +340,7 @@ namespace Touhou_19___Nekuskus
 
             }
         }
-        static void ProcessEnemyMoves(decimal counter, ref List<GameObject> bullets_to_add)
+        static void ProcessEnemyMoves(decimal counter)
         {
             foreach(GameObject ch in Characters)
             {
@@ -364,34 +352,29 @@ namespace Touhou_19___Nekuskus
                         {
                             case 1:
                                 if(ch.Position.Item1 != 0)
-                                {    
-                                    GameObject enemyBullet1 = new GameObject((ch.Position.Item1 - 1, ch.Position.Item2 - 1), ObjectType.EnemyBullet, 1m, 1, 1);
-                                    bullets_to_add.Add(enemyBullet1);
+                                {
+                                    newBullet(new GameObject((ch.Position.Item1 - 1, ch.Position.Item2 - 1), ObjectType.EnemyBullet, 1m, 1, 1));
                                 }
                                 break;
                             case 4:
                                 if(ch.Position.Item1 != 0)
                                 {
-                                    GameObject enemyBullet2 = new GameObject((ch.Position.Item1 - 1, ch.Position.Item2), ObjectType.EnemyBullet, 1m, 4, 1);
-                                    bullets_to_add.Add(enemyBullet2);
+                                    newBullet(new GameObject((ch.Position.Item1 - 1, ch.Position.Item2), ObjectType.EnemyBullet, 1m, 4, 1));
                                 }
                                 break;
                             case 2:
-                                GameObject enemyBullet3 = new GameObject((ch.Position.Item1, ch.Position.Item2 - 1), ObjectType.EnemyBullet, 1m, 2, 1);
-                                bullets_to_add.Add(enemyBullet3);
+                                	newBullet(new GameObject((ch.Position.Item1, ch.Position.Item2 - 1), ObjectType.EnemyBullet, 1m, 2, 1));
                                 break;
                             case 3:
                                 if(ch.Position.Item1 != 89)
                                 { 
-                                    GameObject enemyBullet4 = new GameObject((ch.Position.Item1 + 1, ch.Position.Item2 + 1), ObjectType.EnemyBullet, 1m, 3, 1);
-                                    bullets_to_add.Add(enemyBullet4);
+                                    newBullet(new GameObject((ch.Position.Item1 + 1, ch.Position.Item2 + 1), ObjectType.EnemyBullet, 1m, 3, 1));
                                 }
                                 break;
                             case 6:
                                 if(ch.Position.Item1 != 89)
                                 {
-                                    GameObject enemyBullet5 = new GameObject((ch.Position.Item1 + 1, ch.Position.Item2), ObjectType.EnemyBullet, 1m, 6, 1);
-                                    Bullets.Add(enemyBullet5);
+                                    newBullet(new GameObject((ch.Position.Item1 + 1, ch.Position.Item2), ObjectType.EnemyBullet, 1m, 6, 1));
                                 }
                                 break;
                         }
@@ -455,19 +438,10 @@ namespace Touhou_19___Nekuskus
             
             while(true)
             {
-                startcheck:
-                // Checking focused Window
-
-                IntPtr GFW = GetForegroundWindow();
-                
-                if(handle != GFW)
-                {
-                    goto startcheck;
-                }
-                
-
+				while(handle!=GetForegroundWindow())Thread.Sleep(33); // Checking focused Window
+				
                 CheckKeys(counter);
-                ProcessEnemyMoves(counter, ref bullets_to_add);
+                ProcessEnemyMoves(counter);
                 foreach(GameObject ch in Characters)
                 {
                     if(ch.exists)
@@ -488,18 +462,15 @@ namespace Touhou_19___Nekuskus
                                 if(b.Position == Characters[0].Position)
                                 {
                                     CurLives -= 1;
-                                    b.exists = false;
+									
+									BulletFreeze = true;
+									Thread unfreeze = new Thread(new ThreadStart(UnfreezeBullets));
+									unfreeze.Start();
+									
                                     foreach(GameObject b1 in Bullets)
-                                    {
                                         if(b1.Type == ObjectType.EnemyBullet)
-                                        {
                                             b1.exists = false;
-                                            bullets_to_delete.Add(b);
-                                            BulletFreeze = true;
-                                            Thread unfreeze = new Thread(new ThreadStart(UnfreezeBullets));
-                                            unfreeze.Start();
-                                        }
-                                    }
+									break;
                                 }
                                 if(b.Position.Item2 != 49 && !BulletFreeze)
                                 {
@@ -508,90 +479,55 @@ namespace Touhou_19___Nekuskus
                                         //TODO: Replace this stuff with using the move handler of the bullet
                                         case 1:
                                             if(b.Position.Item1 != 0)
-                                            bullets_to_add.Add(new GameObject((b.Position.Item1 - 1, b.Position.Item2 + 1), b.Type, b.MoveCounter, 1, 1));
+                                            newBullet(new GameObject((b.Position.Item1 - 1, b.Position.Item2 + 1), b.Type, b.MoveCounter, 1, 1));
                                             break;
                                         case 4:
                                             if(b.Position.Item1 != 0)
-                                            bullets_to_add.Add(new GameObject((b.Position.Item1 - 1, b.Position.Item2), b.Type, b.MoveCounter, 4, 1));
+                                            newBullet(new GameObject((b.Position.Item1 - 1, b.Position.Item2), b.Type, b.MoveCounter, 4, 1));
                                             break;
                                         case 2:
-                                            bullets_to_add.Add(new GameObject((b.Position.Item1, b.Position.Item2 + 1), b.Type, b.MoveCounter, 2, 1));
+                                            newBullet(new GameObject((b.Position.Item1, b.Position.Item2 + 1), b.Type, b.MoveCounter, 2, 1));
                                             break;
                                         case 3:
                                             if(b.Position.Item1 != 89)
-                                            bullets_to_add.Add(new GameObject((b.Position.Item1 + 1, b.Position.Item2 + 1), b.Type, b.MoveCounter, 3, 1));
+                                            newBullet(new GameObject((b.Position.Item1 + 1, b.Position.Item2 + 1), b.Type, b.MoveCounter, 3, 1));
                                             break;
                                         case 6:
                                             if(b.Position.Item1 != 89)
-                                            bullets_to_add.Add(new GameObject((b.Position.Item1 + 1, b.Position.Item2), b.Type, b.MoveCounter, 6, 1));
+                                            newBullet(new GameObject((b.Position.Item1 + 1, b.Position.Item2), b.Type, b.MoveCounter, 6, 1));
                                             break;
                                         case 7:
                                             if(b.Position.Item1 != 0)
-                                            bullets_to_add.Add(new GameObject((b.Position.Item1 - 1, b.Position.Item2 - 1), b.Type, b.MoveCounter, 7, 1));
+                                            newBullet(new GameObject((b.Position.Item1 - 1, b.Position.Item2 - 1), b.Type, b.MoveCounter, 7, 1));
                                             break;
                                         case 8:
-                                            bullets_to_add.Add(new GameObject((b.Position.Item1, b.Position.Item2 - 1), b.Type, b.MoveCounter, 8, 1));
+                                            newBullet(new GameObject((b.Position.Item1, b.Position.Item2 - 1), b.Type, b.MoveCounter, 8, 1));
                                             break;
                                         case 9:
                                             if(b.Position.Item1 != 89)
-                                            bullets_to_add.Add(new GameObject((b.Position.Item1 + 1, b.Position.Item2 - 1), b.Type, b.MoveCounter, 9, 1));
+                                            newBullet(new GameObject((b.Position.Item1 + 1, b.Position.Item2 - 1), b.Type, b.MoveCounter, 9, 1));
                                             break;
                                     }
                                 }
-                                if(!BulletFreeze && graze < int.MaxValue)
-                                {
-                                    if(b.Position.Item1 - 1 == Characters[0].Position.Item1)
-                                    {
-                                        if(b.Position.Item2 - 1 == Characters[0].Position.Item2)
-                                        {
-                                            graze++;
-                                        }
-                                        else if(b.Position.Item2 == Characters[0].Position.Item2)
-                                        {
-                                            graze++;
-                                        }
-                                        else if(b.Position.Item2 + 1 == Characters[0].Position.Item2)
-                                        {
-                                            graze++;
-                                        }
-                                    }
-                                    else if(b.Position.Item1 == Characters[0].Position.Item1)
-                                    {
-                                        if(b.Position.Item2 - 1 == Characters[0].Position.Item2)
-                                        {
-                                            graze++;
-                                        }
-                                        else if(b.Position.Item2 + 1 == Characters[0].Position.Item2)
-                                        {
-                                            graze++;
-                                        }
-                                    }
-                                    else if(b.Position.Item1 + 1 == Characters[0].Position.Item1)
-                                    {
-                                        if(b.Position.Item2 - 1 == Characters[0].Position.Item2)
-                                        {
-                                            graze++;
-                                        }
-                                        else if(b.Position.Item2 == Characters[0].Position.Item2)
-                                        {
-                                            graze++;
-                                        }
-                                        else if(b.Position.Item2 + 1 == Characters[0].Position.Item2)
-                                        {
-                                            graze++;
-                                        }
-                                    }
+                                if(!BulletFreeze && graze < int.MaxValue){
+									for(int x = b.Position.Item1-1, xx = 0; xx<3; ++x, ++xx)
+										if(x == Characters[0].Position.Item1){
+										for(int y = b.Position.Item2-1, yy = 0; yy<3; ++y, ++yy)
+											if(y == Characters[0].Position.Item2){
+												graze++; //assume that hit check already happened
+											break;}
+										break;}
                                 }
                             }
                             else if(b.Type == ObjectType.PlayerBullet)
                             {
                                 if(Postać == Postacie.Reimu)
                                 {
-                                    bullets_to_add.Add(new GameObject((b.Position.Item1, b.Position.Item2 - 1), ObjectType.PlayerBullet, b.MoveCounter, 8, 2));
+                                    newBullet(new GameObject((b.Position.Item1, b.Position.Item2 - 1), ObjectType.PlayerBullet, b.MoveCounter, 8, 2));
                                 }
                                 else if(Postać == Postacie.Marisa)
                                 {
-                                    bullets_to_add.Add(new GameObject((b.Position.Item1, b.Position.Item2 - 1), ObjectType.PlayerBullet, b.MoveCounter, 8, 2));
+                                    newBullet(new GameObject((b.Position.Item1, b.Position.Item2 - 1), ObjectType.PlayerBullet, b.MoveCounter, 8, 2));
                                 }
                             }
                             else if(b.Type == ObjectType.PlayerBullet2)
@@ -607,32 +543,14 @@ namespace Touhou_19___Nekuskus
                             }
                         }
                         if(b.PerishCount >= b.PerishTime)
-                        {
-                            bullets_to_delete.Add(b);
-                        }
-                        
+							b.exists = false;
                     }
                 }
 #if DEBUG
                 WriteHorizontal((Bombs.Item1 - 7, Bombs.Item2 + 23), $"Bullets: {Bullets.Count}");
-                WriteHorizontal((Bombs.Item1 - 7, Bombs.Item2 + 24), $"bullets_to_add: {bullets_to_add.Count}");
-                WriteHorizontal((Bombs.Item1 - 7, Bombs.Item2 + 25), $"bullets_to delete: {bullets_to_delete.Count}");
                 WriteHorizontal((Bombs.Item1 - 7, Bombs.Item2 + 26), $"handle: {handle}");
                 WriteHorizontal((Bombs.Item1 - 7, Bombs.Item2 + 27), $"GFW(): {GFW}");
 #endif
-                lock(bullets_to_add)
-                {
-                    foreach(GameObject b in bullets_to_add)
-                    {
-                        Bullets.Add(b);
-                    }
-                    foreach(GameObject b in bullets_to_delete)
-                    {
-                        Bullets.Remove(b);
-                    }
-                    bullets_to_add.Clear();
-                    bullets_to_delete.Clear();
-                }
                 if(CurLives == 0)
                 {
                     ClearGameSpace();
