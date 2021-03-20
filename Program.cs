@@ -49,8 +49,8 @@ namespace Touhou_19___Nekuskus
         public static decimal counter = 1.0m;
         public static bool BulletFreeze = false;
         
-        public static Stack<GameObject> Bullets    = new Stack<GameObject>();
-        public static List<GameObject>  Characters = new List<GameObject>();
+        public static List<GameObject> Bullets    = new List<GameObject>();
+        public static List<GameObject> Characters = new List<GameObject>();
 		
         public enum Postacie{
             Reimu,
@@ -248,16 +248,16 @@ namespace Touhou_19___Nekuskus
             }
             Console.ReadKey();
         }
-		static void newBullet(readonly ref GameObject newObj)
+		static void newBullet(GameObject newObj)
 		{
 			bool added = false;
-			foreach(GameObject o in Bullets)
-				if(!o.exists){
-					o = newObj;
+            for(int i = 0; i<Bullets.Count; ++i)
+                if(!Bullets[i].exists){
+					Bullets[i] = newObj;
 					added = true;
-					break;}//heretical } on code line
+					break;}
 			if(!added)
-				Bullets.Push(newObj);
+				Bullets.Add(newObj);
 		}
 		static void CheckKeys(decimal counter)
         {
@@ -299,14 +299,11 @@ namespace Touhou_19___Nekuskus
                     {
                         case Postacie.Reimu:
                             if(Characters[0].Position.Item1 > 0){ 
-                                GameObject orb1 = new GameObject((Characters[0].Position.Item1 - 1, Characters[0].Position.Item2 - 1), ObjectType.PlayerBullet, 1m, 7, 1);
-                                newBullet(orb1);
+                                newBullet(new GameObject((Characters[0].Position.Item1 - 1, Characters[0].Position.Item2 - 1), ObjectType.PlayerBullet, 1m, 7, 1));
                             }
-                            GameObject orb2 = new GameObject((Characters[0].Position.Item1, Characters[0].Position.Item2 - 1), ObjectType.PlayerBullet, 1m, 8, 1);
-                            newBullet(orb2);
+                            newBullet(new GameObject((Characters[0].Position.Item1, Characters[0].Position.Item2 - 1), ObjectType.PlayerBullet, 1m, 8, 1));
                             if(Characters[0].Position.Item1 < 89){
-                                GameObject orb3 = new GameObject((Characters[0].Position.Item1 + 1, Characters[0].Position.Item2 - 1), ObjectType.PlayerBullet, 1m, 9, 1);
-                                newBullet(orb3);
+                                newBullet(new GameObject((Characters[0].Position.Item1 + 1, Characters[0].Position.Item2 - 1), ObjectType.PlayerBullet, 1m, 9, 1));
                             }
                             break;
                         case Postacie.Marisa:
@@ -329,8 +326,7 @@ namespace Touhou_19___Nekuskus
 								foreach(GameObject l in lasers)
 									if(counter % 30 < 16)
 										newBullet(l);
-                            GameObject arrows = new GameObject((Characters[0].Position.Item1, Characters[0].Position.Item2 - 1), ObjectType.PlayerBullet, 0.5m, 8, 2);
-                            newBullet(arrows);
+                            newBullet(new GameObject((Characters[0].Position.Item1, Characters[0].Position.Item2 - 1), ObjectType.PlayerBullet, 0.5m, 8, 2));
                             break;
                     }
                 }
