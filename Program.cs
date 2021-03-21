@@ -548,8 +548,25 @@ namespace Touhou_19___Nekuskus
 									en.Hp -= b.Hp;
 									goto afterif;
 								}
+								//if()//shouldn't bullets have different speeds?
                                 if(Postać == Postacie.Reimu)
                                 {
+									int clx;//x dist of closest
+									int cly;//y dist of closest
+									float cld = 99999999;//a lot of fake distance
+									foreach(GameObject en in Characters.Where((en) => en.Type != ObjectType.Player))
+									{
+										float dx = en.Position.Item1-b.Position.Item1;//distance by y
+										float dy = en.Position.Item2-b.Position.Item2;//distance by x
+										float d = sqrt(dx*dx+dy*dy);//actual distance
+										if(d<cld){
+											cld = d;
+											clx = dx;
+											cly = dy;
+										}
+									}
+									b.Position.Item1+= Math.Sign(clx);
+									b.Position.Item2+= Math.Sign(cly);
                                     //TODO: Homing shot here, soon™️
                                 }
                                 else if(Postać == Postacie.Marisa)
