@@ -31,8 +31,11 @@ namespace Touhou_19___Nekuskus
         public static (int, int) Graze = (102, 17);
         public static int graze = 0;
 
-        public static (int, int) Points1 = (102, 19);
-        public static (int, int) Points2 = (106, 19);
+        //public static (int, int) Points1 = (102, 19);
+        //public static (int, int) Points2 = (106, 19);
+        public static (int, int) Points = (102, 19);
+        public static (int, int) MaxPoints = (106, 19);
+		
         public static int points = 0;
         public static int maxpoints;
         
@@ -426,20 +429,27 @@ namespace Touhou_19___Nekuskus
             #endregion
 
             // Getting console handle
+			IntPtr handle = IntPtr.Zero;
             string originalTitle = Console.Title;
             string uniqueTitle = Guid.NewGuid().ToString();
             Console.Title = uniqueTitle;
-            IntPtr handle = FindWindowByCaption(IntPtr.Zero, uniqueTitle);
+            if(Environment.OSVersion.Version.Major != 6 && Environment.OSVersion.Version.Minor != 2)
+            	handle = FindWindowByCaption(IntPtr.Zero, uniqueTitle);
             Console.Title = originalTitle;
             
             while(true)
             {
-				while(handle!=GetForegroundWindow())Thread.Sleep(33); // Checking focused Window
+           		if(!(Environment.OSVersion.Version.Major == 6 && Environment.OSVersion.Version.Minor == 2))
+					while(handle!=GetForegroundWindow())Thread.Sleep(33); // Checking focused Window
 				
                 CheckKeys(counter);
                 ProcessEnemyMoves(counter);
                 foreach(GameObject ch in Characters)
                 {
+                    if(ch.Hp <= 0)
+                    {
+                        ch.exists = false;
+                    }
                     if(ch.exists)
                     {
                         WriteHorizontal((ch.Position.Item1, ch.Position.Item2), (ch.Type == ObjectType.Player) ? Hitbox.ToString() : (ch.Type == ObjectType.Boss) ? BossHitbox.ToString() : "E", CharacterColor);
@@ -517,6 +527,11 @@ namespace Touhou_19___Nekuskus
                             }
                             else if(b.Type == ObjectType.PlayerBullet)
                             {
+								foreach(GameObject en in Characters.Where((en) => en.Type != ObjectType.Player && en.Position == b.Position))
+								{
+									en.Hp -= b.Hp;
+									goto afterif;
+								}
                                 if(Postać == Postacie.Reimu)
                                 {
                                     newBullet(new GameObject((b.Position.Item1, b.Position.Item2 - 1), ObjectType.PlayerBullet, b.MoveCounter, 8, 2));
@@ -528,6 +543,11 @@ namespace Touhou_19___Nekuskus
                             }
                             else if(b.Type == ObjectType.PlayerBullet2)
                             {
+								foreach(GameObject en in Characters.Where((en) => en.Type != ObjectType.Player && en.Position == b.Position))
+								{
+									en.Hp -= b.Hp;
+									goto afterif;
+								}
                                 if(Postać == Postacie.Reimu)
                                 {
                                     //TODO: Homing shot here, soon™️
@@ -538,20 +558,27 @@ namespace Touhou_19___Nekuskus
                                 }
                             }
                         }
+						afterif:
                         if(b.PerishCount >= b.PerishTime)
 							b.exists = false;
                     }
+                }
+				foreach(GameObject en in Characters.Where((en) => !en.exists && en.Type != ObjectType.Player).ToArray())
+                {
+                    Characters.Remove(en);
+                    score += 150; //Once there are more enemy types, distinctions will be made and they will award different scores.
+                }
+                if(CurLives == 0)
+                {
+                    ClearGameSpace();
                 }
 #if DEBUG
                 WriteHorizontal((Bombs.Item1 - 7, Bombs.Item2 + 23), $"Bullets: {Bullets.Count}");
                 WriteHorizontal((Bombs.Item1 - 7, Bombs.Item2 + 26), $"handle: {handle}");
                 WriteHorizontal((Bombs.Item1 - 7, Bombs.Item2 + 27), $"GFW(): {GFW}");
 #endif
-                if(CurLives == 0)
-                {
-                    ClearGameSpace();
-                }
                 Console.BackgroundColor = ConsoleColor.DarkCyan;
+                WriteHorizontal(Score, new string('0', 11 - score.ToString().Length) + score.ToString());
                 WriteHorizontal(Lives, new string('*', CurLives - 1) + new string(' ', 11 - CurLives), ConsoleColor.DarkRed);
                 WriteHorizontal(Bombs, new string('*', CurBombs), ConsoleColor.DarkBlue);
                 WriteHorizontal(Graze, graze.ToString(), ConsoleColor.Green);
@@ -568,32 +595,42 @@ namespace Touhou_19___Nekuskus
             WriteHorizontal((Stage.Item1, Stage.Item2), "Stage 1", ConsoleColor.DarkGreen);
             Console.BackgroundColor = ConsoleColor.Black;
 
-        //Creating enemies and bullets starts here uwu
-        GameObject en1 = new GameObject((70, 10), ObjectType.Enemy, 5m, 5m, 5)
-        {
-            Direction = 1
-        };
-        GameObject en2 = new GameObject((45, 5), ObjectType.Enemy, 5m, 5m, 5)
-        {
-            Direction = 2
-        };
-        GameObject en3 = new GameObject((20, 10), ObjectType.Enemy, 3m, 5m, 5)
-        {
-            Direction = 3
-        };
-        GameObject en4 = new GameObject((10, 30), ObjectType.Enemy, 5m, 5m, 5)
-        {
-            Direction = 6
-        };
-        GameObject en5 = new GameObject((80, 35), ObjectType.Enemy, 3m, 5m, 5)
-        {
-            Direction = 4
-        };
-        Characters.Add(en1);
-        Characters.Add(en2);
-        Characters.Add(en3);
-        Characters.Add(en4);
-        Characters.Add(en5);
+			//Creating enemies and bullets starts here uwu
+			GameObject en1 = new GameObject((70, 10), ObjectType.Enemy, 5m, 5m, 5)
+			{
+				Direction = 1
+			};
+			GameObject en2 = new GameObject((45, 5), ObjectType.Enemy, 5m, 5m, 5)
+			{
+				Direction = 2
+			};
+			GameObject en3 = new GameObject((20, 10), ObjectType.Enemy, 3m, 5m, 5)
+			{
+				Direction = 3
+			};
+			GameObject en4 = new GameObject((10, 30), ObjectType.Enemy, 5m, 5m, 5)
+			{
+				Direction = 6
+			};
+			GameObject en5 = new GameObject((80, 35), ObjectType.Enemy, 3m, 5m, 5)
+			{
+				Direction = 4
+			};
+			GameObject en6 = new GameObject((10, 33), ObjectType.Enemy, 5m, 5m, 5)
+			{
+				Direction = 6
+			};
+			GameObject en7 = new GameObject((47, 5), ObjectType.Enemy, 5m, 5m, 5)
+			{
+				Direction = 2
+			};
+			Characters.Add(en1);
+			Characters.Add(en2);
+			Characters.Add(en3);
+			Characters.Add(en4);
+			Characters.Add(en5);
+			Characters.Add(en6);
+			Characters.Add(en7);
         }
         static void UnfreezeBullets()
         {
